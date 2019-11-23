@@ -41,6 +41,30 @@ sql_create_scrapped_table = """ CREATE TABLE IF NOT EXISTS scrapped (
 sql_insert_scrapped_table="INSERT INTO scrapped (destination, time, temperature, note) VALUES (?,?,?,?)"
 
 
+
+import pyowm
+
+owm = pyowm.OWM('4832c5bf5984665cd39ee2d7308311ac')  # You MUST provide a valid API key
+
+
+
+
+def get_temp(location):
+
+    try:
+    # Search for current weather in London (Great Britain)
+    observation = owm.weather_at_place(location)
+
+    w = observation.get_weather()
+
+    return w.get_temperature('celsius')['temp']
+
+    catch Exception ex:
+
+
+
+
+
 def evaluate_rules(dest,temp,n_rules):
 
     parser = Parser()
@@ -56,6 +80,8 @@ def run_process(p_url,d_url, db_url):
     if connect_to_base(browser, p_url):
         #sleep(2)
         html = browser.page_source
+
+        #print(html)
         cities=parse_html(html)
 
         for city in cities:
@@ -70,7 +96,7 @@ def run_process(p_url,d_url, db_url):
         if conn is not None:
             #
             create_table(conn,sql_create_scrapped_table)
-            data_entry(conn,sql_insert_scrapped_table,[city,datetime.datetime.now().strftime('%Y%m%d%H%M%S'),12,"test note"])
+            #data_entry(conn,sql_insert_scrapped_table,[city,datetime.datetime.now().strftime('%Y%m%d%H%M%S'),12,"test note"])
             data_print(conn,"scrapped")
         else:
             print("Error! cannot create the database connection.")
