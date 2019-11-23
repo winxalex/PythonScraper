@@ -9,7 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 
-from storages.storage import create_connection,create_table
+
 
 
 def get_driver(driver_url):
@@ -70,30 +70,19 @@ def parse_html(html):
     return output_list
 
 
-    def get_load_time(article_url):
-        try:
-            # set headers
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-            # make get request to article_url
-            response = requests.get(
-                article_url, headers=headers, stream=True, timeout=3.000)
-            # get page load time
-            load_time = response.elapsed.total_seconds()
-        except Exception as ex:
-            load_time = 'Loading Error'
+def get_load_time(article_url):
+    try:
+        # set headers
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+        # make get request to article_url
+        response = requests.get(
+            article_url, headers=headers, stream=True, timeout=3.000)
+        # get page load time
+        load_time = response.elapsed.total_seconds()
+    except Exception as ex:
+        load_time = 'Loading Error'
 
-        return load_time
+    return load_time
 
-
-def write_to_db(record,d_url):
-    #create a database connection
-    conn = create_connection(d_url)
-
-    # create tables
-    if conn is not None:
-        # create projects table
-        create_table(conn, sql_create_scrapped_table)
-    else:
-        print("Error! cannot create the database connection.")
 
