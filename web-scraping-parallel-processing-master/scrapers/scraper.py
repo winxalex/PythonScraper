@@ -52,21 +52,22 @@ def parse_html(html):
 
         # parse soup object to get row cel td2
         # todo maybe use "detail_info" for more precise location
-        div_blocks = soup.find_all(class_="detail-table__cell text-uppercase fdabf-td2")
+        #div_blocks = soup.find_all(class_="detail-table__cell text-uppercase fdabf-td2")
+        div_blocks = soup.find_all("div",class_="details__info")
 
         for div in div_blocks:
 
-            city_name = div.find("span", class_="visible-xs")
+            span=div.find("span", text="Stadt, Land:")
 
-            if city_name is not None:
-                if city_name.string not in output_list :
-                    output_list.append(city_name.string)
-            else:
-                print(f'Not accessible city tag')
+            if span is not None:
+                location=span.find_next_sibling("span").string
+                if location not in output_list:
+                    output_list.append(location)
+
 
 
     except Exception as ex:
-        print(f'Parsing failed [ex]')
+        print(f'Parsing failed (ex)')
     return output_list
 
 

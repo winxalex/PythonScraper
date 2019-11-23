@@ -47,6 +47,13 @@ def data_entry(conn, insert, record):
         print(e)
 
 
+def data_delete(conn,table_name):
+    try:
+        c = conn.cursor()
+        c.execute("DELETE FROM "+table_name)
+    except Error as e:
+        print(e)
+
 def data_print(conn,table_name):
     try:
         c = conn.cursor()
