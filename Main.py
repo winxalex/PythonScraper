@@ -36,6 +36,7 @@ note_rules=list()
 note_rules.append({"rule":"t>25 and city=='London'","note":"Let's go for a pint"})
 note_rules.append({"rule":"t<10 and city=='London'","note":"Frizzing"})
 note_rules.append({"rule":"t<5 and city=='Madrid'","note":"!Que frio!"})
+note_rules.append({"rule":"t<5 and city=='Moskau'","note":"!FFFFFF!"})
 
 #print(parser.parse(note_rules[0]['rule']).evaluate({"t":3,"city":'London'}))
 
@@ -140,18 +141,18 @@ def run_process(p_url,d_url, db_url):
         browser.quit()
 
 
-if __name__ == '__main__':
-
-
-    requests_cache.install_cache(expire_after=3600) #after 1hour
 
 
 
-    start_time = time()
-
-    run_process(page_url,driver_url,db_url)
+requests_cache.install_cache(expire_after=3600) #after 1hour
 
 
-    end_time = time()
-    elapsed_time = end_time - start_time
-    print(f'Elapsed run time: {elapsed_time} seconds')
+
+start_time = time()
+
+run_process(page_url,driver_url,db_url)
+
+
+end_time = time()
+elapsed_time = end_time - start_time
+print(f'Elapsed run time: {elapsed_time} seconds')
