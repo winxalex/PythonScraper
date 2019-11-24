@@ -1,16 +1,17 @@
 import datetime
-from itertools import repeat
-from time import sleep, time
-from multiprocessing import Pool, cpu_count
+
+from time import time
+import requests_cache
 from py_expression_eval import Parser
 import pyowm
-from scrapers.scraper import get_driver, connect_to_base, \
+from scrapers.scraper import get_driver, connect_to_site, \
     parse_html
+
 
 from storages.storage import create_connection,create_table,\
     data_entry,data_print,data_delete
 
-#load from config
+#todo load from config
 
 page_url="https://www.viennaairport.com/passagiere/ankunft__abflug/abfluege"
 driver_url="D:\Projects\PythonScraper\chromedriver.exe"
@@ -36,6 +37,8 @@ note_rules.append({"rule":"t>25 and city=='London'","note":"Let's go for a pint"
 note_rules.append({"rule":"t<10 and city=='London'","note":"Frizzing"})
 note_rules.append({"rule":"t<5 and city=='Madrid'","note":"!Que frio!"})
 
+#print(parser.parse(note_rules[0]['rule']).evaluate({"t":3,"city":'London'}))
+
 #every hour
 #from crontab import CronTab
 #
@@ -47,7 +50,7 @@ note_rules.append({"rule":"t<5 and city=='Madrid'","note":"!Que frio!"})
 
 
 
-#print(parser.parse(note_rules[0]['rule']).evaluate({"t":3,"city":'London'}))
+
 
 
 
@@ -91,8 +94,8 @@ def run_process(p_url,d_url, db_url):
 
     browser = get_driver(d_url)
     
-    if connect_to_base(browser, p_url):
-        #sleep(2)
+    if connect_to_site(browser, p_url):
+
         html = browser.page_source
 
         #print(html)
@@ -101,9 +104,6 @@ def run_process(p_url,d_url, db_url):
         #print(locations)
 
         owm = pyowm.OWM(weather_app_id)  # You MUST provide a valid API key
-
-
-
 
 
         #create a database connection
@@ -141,23 +141,17 @@ def run_process(p_url,d_url, db_url):
 
 
 if __name__ == '__main__':
-    # set variables
-    start_time = time()
-    output_timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    output_filename = f'output_{output_timestamp}.csv'
 
-    #browser = get_driver(driver_url)
-    #result=connect_to_base(browser, base_url)
+
+    requests_cache.install_cache(expire_after=3600) #after 1hour
+
+
+
+    start_time = time()
 
     run_process(page_url,driver_url,db_url)
 
-    #print(result)
 
-    # scrape and crawl
-    #with Pool(cpu_count()-1) as p:
-    #    p.starmap(run_process, zip(range(1, 21), repeat(page_url,driver_url,db_url)))
-    #p.close()
-    #p.join()
     end_time = time()
     elapsed_time = end_time - start_time
     print(f'Elapsed run time: {elapsed_time} seconds')

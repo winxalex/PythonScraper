@@ -1,7 +1,5 @@
-import csv
 import requests
-import datetime
-from time import sleep, time
+
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -22,7 +20,7 @@ def get_driver(driver_url):
     return driver
 
 
-def connect_to_base(browser, base_url):
+def connect_to_site(browser, base_url):
     connection_attempts = 0
     while connection_attempts < 3:
         try:
@@ -76,7 +74,7 @@ def get_load_time(article_url):
         # set headers
         headers = {
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-        # make get request to article_url
+        # make get request to url
         response = requests.get(
             article_url, headers=headers, stream=True, timeout=3.000)
         # get page load time
