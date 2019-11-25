@@ -153,6 +153,6 @@ requests_cache.install_cache(expire_after=3600)  #after 1hour
 #job.hour.every(1)
 #
 #cron.write()
-#scrap_every(3600)
-scrap_every(5)
+scrap_every(3600)
+#scrap_every(5)
 
