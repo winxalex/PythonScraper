@@ -1,7 +1,7 @@
 import datetime
 
 from time import time
-import requests_cache
+
 from py_expression_eval import Parser
 import pyowm
 from scrapers.scraper import get_driver, connect_to_site, \
@@ -41,6 +41,9 @@ note_rules.append({"rule": "t<5 and city=='Moskau'", "note": "!FFFFFF!"})
 
 #print(parser.parse(note_rules[0]['rule']).evaluate({"t":3,"city":'London'}))
 
+cache_dict=dict()
+cache_time=3600
+cache_currentTime=time()
 
 
 
@@ -82,68 +85,100 @@ def evaluate_rules(city, temp, n_rules):
 
     return ''
 
+def get_html(d_url,p_url,c_t):
 
-def run_process(p_url, d_url, db_url):
+    global cache_currentTime
+
+    t=time()
+
+    if (p_url in cache_dict) and (t-cache_currentTime<c_t):
+        print(f"Returned {p_url} from cache. Cached  time:{t-cache_currentTime} ")
+        return cache_dict[p_url]
 
     browser = get_driver(d_url)
 
     if connect_to_site(browser, p_url):
 
+        print(f"Get page {p_url}")
         html = browser.page_source
 
-        #print(html)
-        locations = parse_html(html)
-
-        #print(locations)
-
-        owm = pyowm.OWM(weather_app_id)  # You MUST provide a valid API key
-
-        #create a database connection
-        conn = create_connection(db_url)
-
-        if conn is not None:
-
-            data_delete(conn, sql_table_name)
-
-            #
-            create_table(conn, sql_create_scrapped_table)
-            #data_entry(conn,sql_insert_scrapped_table,[city,datetime.datetime.now().strftime('%Y%m%d%H%M%S'),12,"test note"])
-
-            for location in locations:
-                temp = get_temp(owm, location)
-                if temp > -255:
-                    city = location.split(',')[0]
-                    data_entry(conn, sql_insert_scrapped_table,
-                               [city, datetime.datetime.now().strftime('%Y%m%d%H%M%S'), temp,
-                                evaluate_rules(city, temp, note_rules)])
-
-            data_print(conn, sql_table_name)
-
-            conn.close()
-        else:
-            print("Error! cannot create the database connection.")
-
+        cache_dict[p_url]=html;
+        cache_currentTime=t
         #print(html)
         browser.quit()
+
+        return html
     else:
         print('Error connecting to [p_url]')
         browser.quit()
+        return None
+
+
+def run_process(p_url, d_url, db_url,refresh_t):
+
+
+        html=get_html(d_url,p_url,refresh_t)
+
+        if html is not None:
+
+            #print(html)
+            locations = parse_html(html)
+
+            #print(locations)
+
+            owm = pyowm.OWM(weather_app_id)  # You MUST provide a valid API key
+
+            #create a database connection
+            conn = create_connection(db_url)
+
+            if conn is not None:
+
+                data_delete(conn, sql_table_name)
+
+                #
+                create_table(conn, sql_create_scrapped_table)
+                #data_entry(conn,sql_insert_scrapped_table,[city,datetime.datetime.now().strftime('%Y%m%d%H%M%S'),12,"test note"])
+
+                for location in locations:
+                    temp = get_temp(owm, location)
+                    if temp > -255:
+                        city = location.split(',')[0]
+                        data_entry(conn, sql_insert_scrapped_table,
+                                   [city, datetime.datetime.now().strftime('%Y%m%d%H%M%S'), temp,
+                                    evaluate_rules(city, temp, note_rules)])
+
+                data_print(conn, sql_table_name)
+
+                conn.close()
+            else:
+                print("Error! cannot create the database connection.")
+
+
 
 
 def scrap_process():
     start_time = time()
 
-    run_process(page_url, driver_url, database_url)
+
+
+    run_process(page_url, driver_url, database_url,60)
 
     end_time = time()
     elapsed_time = end_time - start_time
     print(f'Elapsed run time: {elapsed_time} seconds')
 
 def scrap_every(sec):
-    threading.Timer(sec, scrap_every, args=[sec]).start()
-    scrap_process()
 
-requests_cache.install_cache(expire_after=3600)  #after 1hour
+    thread = threading.Thread(target=scrap_process)
+    thread.start()
+
+    # wait here for the result to be available before continuing
+    thread.join()
+
+    print("start new timer ")
+    threading.Timer(sec, scrap_every, args=[sec]).start()
+
+
 
 #every hour
 #from crontab import CronTab
@@ -153,6 +188,8 @@ requests_cache.install_cache(expire_after=3600)  #after 1hour
 #job.hour.every(1)
 #
 #cron.write()
-scrap_every(3600)
-#scrap_every(5)
+#scrap_every(3600)
+
+
+scrap_every(5)
 
