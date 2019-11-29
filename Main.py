@@ -1,5 +1,5 @@
 import datetime
-
+import config
 from time import time
 
 from py_expression_eval import Parser
@@ -11,12 +11,12 @@ import threading
 from storages.storage import create_connection, create_table, \
     data_entry, data_print, data_delete
 
-#todo load from config
+page_url = config.page_url
+driver_url = config.driver_url
+database_url = config.database_url
+weather_app_id = config.weather_app_id
 
-page_url = "https://www.viennaairport.com/passagiere/ankunft__abflug/abfluege"
-driver_url = "D:\Projects\PythonScraper\chromedriver.exe"
-database_url = r"D:\Projects\PythonScraper\scrapped.db"
-weather_app_id = '4832c5bf5984665cd39ee2d7308311ac'
+
 sql_table_name = "scrapped"
 
 #destination, time, temperature and note into a database
@@ -104,7 +104,7 @@ def get_html(d_url,p_url,c_t):
 
         cache_dict[p_url]=html;
         cache_currentTime=t
-        #print(html)
+
         browser.quit()
 
         return html
@@ -121,10 +121,9 @@ def run_process(p_url, d_url, db_url,refresh_t):
 
         if html is not None:
 
-            #print(html)
+
             locations = parse_html(html)
 
-            #print(locations)
 
             owm = pyowm.OWM(weather_app_id)  # You MUST provide a valid API key
 
@@ -135,9 +134,7 @@ def run_process(p_url, d_url, db_url,refresh_t):
 
                 data_delete(conn, sql_table_name)
 
-                #
                 create_table(conn, sql_create_scrapped_table)
-                #data_entry(conn,sql_insert_scrapped_table,[city,datetime.datetime.now().strftime('%Y%m%d%H%M%S'),12,"test note"])
 
                 for location in locations:
                     temp = get_temp(owm, location)
@@ -157,14 +154,14 @@ def run_process(p_url, d_url, db_url,refresh_t):
 
 
 def scrap_process():
+
     start_time = time()
-
-
 
     run_process(page_url, driver_url, database_url,60)
 
     end_time = time()
     elapsed_time = end_time - start_time
+
     print(f'Elapsed run time: {elapsed_time} seconds')
 
 def scrap_every(sec):
@@ -181,13 +178,6 @@ def scrap_every(sec):
 
 
 #every hour
-#from crontab import CronTab
-#
-#cron = CronTab(user='username')
-#job = cron.new(command='E:\\Program Files\\Python3.8\\python D:\\Projects\\PythonScraper\\everyHour.py')
-#job.hour.every(1)
-#
-#cron.write()
 #scrap_every(3600)
 
 
